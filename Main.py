@@ -4,14 +4,18 @@ import matplotlib.pyplot as plt
 
 def main():
 
+    a = [(1, 2), (3, 2), (4, 3), (2, 2)]
+    b = tuple(a)
 
     state = DiamondBoard(5)
     state2 = DiamondBoard(5)
 
-    a = dict()
-    a[state] = 3
+    act = state.get_actions()
+    state = state.do_action(act[2])
+    state2 = state2.do_action(state2.get_actions()[2])
 
-    print(a[state2])
+    print((state, state.get_actions()[1]) == (state2, state2.get_actions()[1]))
+#    draw_state(state)
 
 
 

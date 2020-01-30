@@ -2,7 +2,7 @@ class HexBoard:
 
     def __init__(self, board):
         self.__board__ = board
-        self.__actions__ = tuple(self.__initatePossibleActions__())
+        self.__actions__ = self.__initatePossibleActions__()
 
     def __eq__(self, obj):
         return isinstance(obj, HexBoard) and obj.__board__ == self.__board__
@@ -20,7 +20,8 @@ class HexBoard:
                 if self.__board__[i][j] == 1:
                     for action in self.__getActionsFor__((i, j)):
                         actions.append(action)
-        return action
+
+        return tuple(actions)
 
     def __getActionsFor__(self, pos):
         north_target = (pos[0], pos[1] - 1)
@@ -67,7 +68,7 @@ class HexBoard:
         if action not in self.__actions__:
             raise Exception("Impossible action")
 
-        new_board = list(map(lambda x: x.copy(), self.__board__))
+        new_board = list(map(lambda x: list(x), self.__board__))
 
         pos = action[0]
         target = action[1]
@@ -77,7 +78,7 @@ class HexBoard:
         new_board[target[0]][target[1]] = 0
         new_board[dest[0]][dest[1]] = 1
 
-        return HexBoard(new_board)
+        return HexBoard(tuple(map(lambda x: tuple(x), new_board)))
 
     def get_board(self):
         return self.__board__
