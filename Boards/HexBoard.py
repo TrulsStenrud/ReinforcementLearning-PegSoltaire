@@ -1,25 +1,26 @@
 class HexBoard:
 
     def __init__(self, board):
-        self.board = board
-        self.actions = []
-        self.__initatePossibleActions__()
+        self.__board__ = board
+        self.__actions__ = tuple(self.__initatePossibleActions__())
 
     def __eq__(self, obj):
-        return isinstance(obj, HexBoard) and obj.board == self.board
+        return isinstance(obj, HexBoard) and obj.__board__ == self.__board__
 
     def __copy__(self):
-        return HexBoard(list(map(lambda x: x.copy(), self.board)))
+        return HexBoard(list(map(lambda x: x.copy(), self.__board__)))
 
-    def get_actions(self):
-        return self.actions.copy()
+    def __hash__(self):
+        return self.__board__.__hash__()
 
     def __initatePossibleActions__(self):
-        for i in range(0, len(self.board)):
-            for j in range(0, len(self.board[i])):
-                if self.board[i][j] == 1:
+        actions = list()
+        for i in range(0, len(self.__board__)):
+            for j in range(0, len(self.__board__[i])):
+                if self.__board__[i][j] == 1:
                     for action in self.__getActionsFor__((i, j)):
-                        self.actions.append(action)
+                        actions.append(action)
+        return action
 
     def __getActionsFor__(self, pos):
         north_target = (pos[0], pos[1] - 1)
@@ -53,14 +54,20 @@ class HexBoard:
 
     def __checkAction__(self, pos, target, dest, return_actions):
         if self.__isAPosition__(dest) and self.__isAPosition__(target):
-            if self.board[target[0]][target[1]] == 1 and self.board[dest[0]][dest[1]] == 0:
+            if self.__board__[target[0]][target[1]] == 1 and self.__board__[dest[0]][dest[1]] == 0:
                 return_actions.append((pos, target, dest))
 
+    def __isAPosition__(self, pos):
+        x = pos[0]
+        y = pos[1]
+
+        return 0 <= x < len(self.__board__) and 0 <= y < len(self.__board__[x])
+
     def do_action(self, action):
-        if action not in self.actions:
+        if action not in self.__actions__:
             raise Exception("Impossible action")
 
-        new_board = list(map(lambda x : x.copy(), self.board))
+        new_board = list(map(lambda x: x.copy(), self.__board__))
 
         pos = action[0]
         target = action[1]
@@ -72,8 +79,27 @@ class HexBoard:
 
         return HexBoard(new_board)
 
-    def __isAPosition__(self, pos):
-        x = pos[0]
-        y = pos[1]
+    def get_board(self):
+        return self.__board__
 
-        return 0 <= x < len(self.board) and 0 <= y < len(self.board[x])
+    def get_actions(self):
+        return self.__actions__
+
+    def get_edges(self):
+        edges = list()
+        for x in range(0, len(self.__board__)):
+            for y in range(0, len(self.__board__[x])):
+                west = (x - 1, y)
+                south = (x, y + 1)
+                south_west = (x - 1, y + 1)
+
+                if self.__isAPosition__(west):
+                    edges.append(((x, y), west))
+
+                if self.__isAPosition__(south):
+                    edges.append(((x, y), south))
+
+                if self.__isAPosition__(south_west):
+                    edges.append(((x, y), south_west))
+        return edges
+
