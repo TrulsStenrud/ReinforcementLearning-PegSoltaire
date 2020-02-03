@@ -6,6 +6,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from Boards.DummyBoard import DummyBoard
+from Boards.Triangle import TriangleBoard
 
 
 class Actor:
@@ -86,18 +87,23 @@ def main():
     remaining_pegs = list()
     ##remaining_pegs = list()
 
-    n_episodes = 1000
+    n_episodes = 500
     gamma = 0.9  # discount rate γ
     learning_rate_a = 0.8  # α
     learning_rate_c = 0.8  # α
     trace_decay = 0.8
     epsilon = 0.5
-    epsilon_decay = 0.9
+    epsilon_decay = 0.5
 
     actor = Actor(learning_rate_a, trace_decay, gamma)
     critic = Critic(gamma, learning_rate_c, trace_decay)
 
-    init_state = DiamondBoard(5)
+    free_cells = list()
+    #free_cells.append((1, 1))
+    free_cells.append((2, 2))
+    init_state = TriangleBoard(5, free_cells)
+
+
    # init_state = DummyBoard()
 
     for ep in range(0, n_episodes):
@@ -126,7 +132,8 @@ def main():
         remaining_pegs.append(old_state.peg_count())
         epsilon *= epsilon_decay
 
-    #draw_state(init_state)
+  #  for state in current_episode:
+    draw_state(old_state)
     plot(remaining_pegs)
 
 
@@ -156,7 +163,7 @@ def draw_state(state):
             colors.append('red')
         else:
             colors.append('black')
-    my_pos = nx.spring_layout(G, seed=3, iterations=50)
+    my_pos = nx.spring_layout(G, seed=4, iterations=50)
 
     nx.draw(G, pos=my_pos, node_color=colors)
     plt.show()

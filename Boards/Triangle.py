@@ -1,7 +1,7 @@
 from Boards.HexBoard import HexBoard
 
 
-class DiamondBoard(HexBoard):
+class TriangleBoard(HexBoard):
     def __init__(self, size, free_cells):
         board = self.makeBoard(size)
 
@@ -16,6 +16,7 @@ class DiamondBoard(HexBoard):
             board.append([])
             for j in range(0, size):
                 board[i].append(1)
+            size -= 1
 
         return board
 
