@@ -1,26 +1,123 @@
+from collections import defaultdict
+from random import random
+
 from Boards.DiamondBoard import DiamondBoard
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
+class Actor:
+    def __init__(self, learning_rate, trace_decay, gamma):
+        self.gamma = gamma
+        self.learning_rate = learning_rate
+        self.trace_decay = trace_decay
+        self.policy = defaultdict(lambda: 0)
+
+    def get_action(self, state, epsilon):
+        actions = state.get_actions()
+        if random() > epsilon:
+            n = int(random() * len(actions))
+            return actions[n]
+        else:
+            return min(actions, key=lambda x: self.policy[(state, x)])
+
+    def update_td_error(self, current_episode, td_error):
+        eligibility = 1
+
+        for sa in reversed(current_episode):
+            self.policy[sa] += self.learning_rate*td_error*eligibility
+            eligibility *= self.gamma*self.trace_decay
+
+    def new_episode(self):
+        pass
+
+
+class Critic:
+    def __init__(self, gamma, rate, trace_decay):
+        self.__valueFunction__ = defaultdict(lambda: 0)
+        self.__gamma__ = gamma
+        self.__l_rate__ = rate
+        self.__trace_decay__ = trace_decay
+
+    def do_stuff(self, r, new_state, old_state):
+        v_new_state = self.__valueFunction__[new_state]
+        v_old_state = self.__valueFunction__[old_state]
+        td_error = r + self.__gamma__*v_new_state - v_old_state
+        return td_error
+
+    def new_episode(self):
+        pass
+
+    def update_stuff(self, current_episode, td_error):
+        eligibility = 1
+        for sa in reversed(current_episode):
+            state = sa[0]
+            self.__valueFunction__[state] += self.__l_rate__*td_error*eligibility
+            eligibility *= self.__gamma__ * self.__trace_decay__
+
+
 def main():
+    remaining_pegs = list()
 
-    a = [(1, 2), (3, 2), (4, 3), (2, 2)]
-    b = tuple(a)
+    n_episodes = 1000
+    gamma = 0.95  # discount rate γ
+    learning_rate_a = 0.99  # α
+    learning_rate_c = 0.95  # α
+    trace_decay = 0.9
+    epsilon = 0.5
+    epsilon_decay = 0.5
 
-    state = DiamondBoard(5)
-    state2 = DiamondBoard(5)
+    actor = Actor(learning_rate_a, trace_decay, gamma)
+    critic = Critic(gamma, learning_rate_c, trace_decay)
 
-    act = state.get_actions()
-    state = state.do_action(act[2])
-    state2 = state2.do_action(state2.get_actions()[2])
+    init_state = DiamondBoard(5)
 
-    print((state, state.get_actions()[1]) == (state2, state2.get_actions()[1]))
-#    draw_state(state)
+    for ep in range(0, n_episodes):
+        new_state = init_state
+        old_state = new_state
+        current_episode = list()
+
+        while not old_state.is_terminate_state():
+
+            action = actor.get_action(old_state, epsilon)
+            current_episode.append((old_state, action))
+
+            new_state = old_state.do_action(action)
+            r = new_state.reward()
+
+            td_error = critic.do_stuff(r, new_state, old_state)
+
+            critic.update_stuff(current_episode, td_error)
+            actor.update_td_error(current_episode, td_error)
+
+            old_state = new_state
+
+        print(old_state.reward())
+        actor.new_episode()
+        critic.new_episode()
+        remaining_pegs.append(old_state.peg_count())
+        epsilon *= epsilon_decay
+
+    #draw_state(init_state)
+    plot(remaining_pegs)
+
+
+
+def plot(remaining_pegs):
+    plt.plot(remaining_pegs)
+    plt.ylabel('Remaining pegs')
+    plt.show()
+
+
+#    for sa in currentEpisode:
+#        draw_state(sa[0])
+
 
 
 
 def draw_state(state):
     G = nx.Graph()
+
     edges = state.get_edges()
     for edge in edges:
         G.add_edge(edge[0], edge[1])
@@ -32,8 +129,14 @@ def draw_state(state):
         else:
             colors.append('black')
     my_pos = nx.spring_layout(G, seed=3, iterations=50)
+
     nx.draw(G, pos=my_pos, node_color=colors)
     plt.show()
+
+
+def maint():
+    print("t")
+
 
 
 if __name__ == "__main__":

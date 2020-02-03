@@ -64,6 +64,32 @@ class HexBoard:
 
         return 0 <= x < len(self.__board__) and 0 <= y < len(self.__board__[x])
 
+    # TODO this is only temporary, for a size 5 diamond game
+    def reward(self):
+        if not self.is_terminate_state():
+            return 0
+
+        reward = 100
+        count = self.peg_count()
+
+        if count == 1:
+            return reward
+
+        return -reward
+
+
+
+    def peg_count(self):
+        count = 0
+        for row in self.__board__:
+            for peg in row:
+                if peg == 1:
+                    count += 1
+        return count
+
+    def is_terminate_state(self):
+        return len(self.__actions__) == 0
+
     def do_action(self, action):
         if action not in self.__actions__:
             raise Exception("Impossible action")
