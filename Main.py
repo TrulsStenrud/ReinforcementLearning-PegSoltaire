@@ -19,7 +19,24 @@ class Actor:
             n = int(random() * len(actions))
             return actions[n]
         else:
-            return min(actions, key=lambda x: self.policy[(state, x)])
+            return max(actions, key=lambda x: self.policy[(state, x)])
+
+            ## trying to pick values based on probability, but im not using it
+            ## now
+            m = min(map(lambda x: self.policy[(state, x)], actions))
+            tot = sum(map(lambda x: self.policy[(state, x)] - m, actions))
+
+            if tot == 0:
+                n = int(random() * len(actions))
+                return actions[n]
+
+            r = random()
+            counter = 0
+            for action in actions:
+                counter += (self.policy[(state, action)]-m)/tot
+                if counter > r:
+                    return action
+
 
     def update_td_error(self, current_episode, td_error):
         eligibility = 1
@@ -34,15 +51,18 @@ class Actor:
 
 class Critic:
     def __init__(self, gamma, rate, trace_decay):
-        self.__valueFunction__ = defaultdict(lambda: 0)
-        self.__gamma__ = gamma
-        self.__l_rate__ = rate
+        self._valueFunction = defaultdict(lambda: 0)
+        self._gamma = gamma
+        self._l_rate = rate
         self.__trace_decay__ = trace_decay
 
     def do_stuff(self, r, new_state, old_state):
-        v_new_state = self.__valueFunction__[new_state]
-        v_old_state = self.__valueFunction__[old_state]
-        td_error = r + self.__gamma__*v_new_state - v_old_state
+        self._valueFunction[old_state] += self._l_rate * (r + self._gamma * self._valueFunction[new_state]
+                                                          - self._valueFunction[old_state])
+
+        v_new_state = self._valueFunction[new_state]
+        v_old_state = self._valueFunction[old_state]
+        td_error = r + self._gamma * v_new_state - v_old_state
         return td_error
 
     def new_episode(self):
@@ -52,20 +72,22 @@ class Critic:
         eligibility = 1
         for sa in reversed(current_episode):
             state = sa[0]
-            self.__valueFunction__[state] += self.__l_rate__*td_error*eligibility
-            eligibility *= self.__gamma__ * self.__trace_decay__
+            self._valueFunction[state] += self._l_rate * td_error * eligibility
+
+            eligibility *= self._gamma * self.__trace_decay__
 
 
 def main():
     remaining_pegs = list()
+    ##remaining_pegs = list()
 
     n_episodes = 1000
     gamma = 0.95  # discount rate γ
     learning_rate_a = 0.99  # α
     learning_rate_c = 0.95  # α
-    trace_decay = 0.9
-    epsilon = 0.5
-    epsilon_decay = 0.5
+    trace_decay = 0.6
+    epsilon = 0.2
+    epsilon_decay = 0.9
 
     actor = Actor(learning_rate_a, trace_decay, gamma)
     critic = Critic(gamma, learning_rate_c, trace_decay)
@@ -92,7 +114,7 @@ def main():
 
             old_state = new_state
 
-        print(old_state.reward())
+        #print(old_state.reward())
         actor.new_episode()
         critic.new_episode()
         remaining_pegs.append(old_state.peg_count())

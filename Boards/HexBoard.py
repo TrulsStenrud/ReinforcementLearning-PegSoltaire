@@ -75,7 +75,7 @@ class HexBoard:
         if count == 1:
             return reward
 
-        return -reward
+        return -reward*count
 
 
 
