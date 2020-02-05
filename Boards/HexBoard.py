@@ -78,7 +78,6 @@ class HexBoard:
         return -reward*count
 
 
-
     def peg_count(self):
         count = 0
         for row in self.__board__:
