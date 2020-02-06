@@ -6,7 +6,7 @@ from keras import Sequential
 from keras.layers import Dense
 import keras
 
-from Boards.DiamondBoard import DiamondBoard
+from Boards.DiamondBoard import DiamondBoard, SortOfDiamondBoard
 import networkx as nx
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -18,16 +18,18 @@ from splitgd import SplitGD
 
 
 class Actor:
-    def __init__(self, learning_rate, trace_decay, gamma):
+    def __init__(self, learning_rate, trace_decay, gamma, epsilon, epsilon_decay):
         self.gamma = gamma
         self.learning_rate = learning_rate
         self.trace_decay = trace_decay
         self.policy = defaultdict(lambda: random())
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
 
-    def get_action(self, state, epsilon):
+    def get_action(self, state):
         actions = state.get_actions()
 
-        if random() < epsilon:
+        if random() < self.epsilon:
             n = int(random() * len(actions))
             return actions[n]
         else:
@@ -57,7 +59,7 @@ class Actor:
             eligibility *= self.gamma * self.trace_decay
 
     def new_episode(self):
-        pass
+        self.epsilon *= self.epsilon_decay
 
 
 class NCritic:
@@ -93,6 +95,9 @@ class NCritic:
 
         pass
 
+    def new_episode(self):
+        pass
+
     @staticmethod
     def encode(new_state):
         code = []
@@ -103,36 +108,15 @@ class NCritic:
         return code
 
 
-def main():
+def do_reinforcement_learning(actor, critic, init_state, n_episodes):
     remaining_pegs = list()
-
-    n_episodes = 1000
-    gamma = 0.9  # discount rate γ
-    learning_rate_a = 0.8  # α
-    learning_rate_c = 0.8  # α
-    trace_decay = 0.8
-    epsilon = 0.5
-    epsilon_decay = 0.5
-
-    actor = Actor(learning_rate_a, trace_decay, gamma)
-    critic = Critic(gamma, learning_rate_c, trace_decay)
-
-    critic = NCritic(gamma, learning_rate_c, trace_decay)
-
-    free_cells = list()
-    free_cells.append((2, 1))
-
-    init_state = TriangleBoard(4, free_cells)
-
-    # init_state = DummyBoard()
-
     for ep in range(0, n_episodes):
         new_state = init_state
         old_state = new_state
         current_episode = list()
 
         while not old_state.is_terminate_state():
-            action = actor.get_action(old_state, epsilon)
+            action = actor.get_action(old_state)
             current_episode.append((old_state, action))
 
             new_state = old_state.do_action(action)
@@ -149,8 +133,6 @@ def main():
         actor.new_episode()
         critic.new_episode()
         remaining_pegs.append(old_state.peg_count())
-        epsilon *= epsilon_decay
-
     #  for state in current_episode:
     draw_state(old_state)
     plot(remaining_pegs)
@@ -160,10 +142,6 @@ def plot(remaining_pegs):
     plt.plot(remaining_pegs)
     plt.ylabel('Remaining pegs')
     plt.show()
-
-
-#    for sa in currentEpisode:
-#        draw_state(sa[0])
 
 
 def draw_state(state):
@@ -179,15 +157,35 @@ def draw_state(state):
             colors.append('red')
         else:
             colors.append('black')
-    my_pos = nx.spring_layout(G, seed=4, iterations=50)
+    my_pos = nx.spring_layout(G, seed=5, iterations=50)
 
     nx.draw(G, pos=my_pos, node_color=colors)
     plt.show()
 
 
-def maint():
-    print("t")
+def main():
 
+    n_episodes = 1000
+    gamma = 0.9  # discount rate γ
+    learning_rate_a = 0.8  # α
+    learning_rate_c = 0.8  # α
+    trace_decay = 0.8
+    epsilon = 0.5
+    epsilon_decay = 0.9
+
+    actor = Actor(learning_rate_a, trace_decay, gamma, epsilon, epsilon_decay)
+    critic = Critic(gamma, learning_rate_c, trace_decay)
+    #critic = NCritic(gamma, learning_rate_c, trace_decay)
+
+    free_cells = list()
+    free_cells.append((2, 1))
+
+    init_state = DiamondBoard(5, free_cells)
+    init_state = SortOfDiamondBoard()
+
+    # init_state = DummyBoard()
+
+    do_reinforcement_learning(actor, critic, init_state, n_episodes)
 
 if __name__ == "__main__":
     main()
