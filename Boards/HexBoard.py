@@ -103,7 +103,10 @@ class HexBoard:
         new_board[target[0]][target[1]] = 0
         new_board[dest[0]][dest[1]] = 1
 
-        return HexBoard(tuple(map(lambda x: tuple(x), new_board)))
+        new_state = HexBoard(tuple(map(lambda x: tuple(x), new_board)))
+        r = new_state.reward()
+
+        return new_state, r
 
     def get_board(self):
         return self.__board__

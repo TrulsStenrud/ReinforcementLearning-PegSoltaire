@@ -1,10 +1,9 @@
 from collections import defaultdict
 from random import random
+from torch import nn
+from torch import optim
 
-from keras import Sequential
-
-from keras.layers import Dense
-import keras
+import torch
 
 from Boards.DiamondBoard import DiamondBoard, SortOfDiamondBoard
 import networkx as nx
@@ -14,7 +13,8 @@ import numpy as np
 from Boards.DummyBoard import DummyBoard
 from Boards.Triangle import TriangleBoard
 from Critic import Critic
-from splitgd import SplitGD
+from Network import Network
+from torchviz import make_dot
 
 
 class Actor:
@@ -63,39 +63,62 @@ class Actor:
 
 
 class NCritic:
-    def __init__(self, gamma, rate, trace_decay):
+    def __init__(self, gamma, rate, trace_decay, layer_sizes):
         self._valueFunction = defaultdict(lambda: random())
         self._gamma = gamma
         self._l_rate = rate
         self._trace_decay = trace_decay
 
-        model = keras.Sequential()
-        activation = 'sigmoid'
+        self.model = nn.Sequential()
+        for i in range(1, len(layer_sizes)):
+            inp = layer_sizes[i - 1]
+            outp = layer_sizes[i]
 
-        model.add(Dense(3, input_shape=[3], activation=activation))
-        #model.add(Dense(16, activation=activation))
-        model.add(Dense(1, activation=activation))
+            layer_name = "layer%d" % i
+            sig_name = "activation%d" % i
+            self.model.add_module(layer_name, nn.Linear(inp, outp))
+            self.model.add_module(sig_name, nn.ReLU())
 
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-        self.model = model
+        self.optimizer = optim.SGD(self.model.parameters(), lr=0.01, momentum=0.9)
+        self.eligibilitys = list()
+        self.dtype = torch.float
+        self.device = torch.device("cpu")
 
     def update_stuff(self, current_episode, td_error):
         pass
 
     def calculate_td_error(self, r, new_state, old_state):
-        a = SplitGD(self.model)
-        features = [tf.convert_to_tensor(self.encode(old_state)), tf.convert_to_tensor(self.encode(new_state))]
-        targets = [[0], [0]]
-        x = np.array([1, 1, 0])
-        y = np.array([[0]])
-        #self.model.fit(x, y)
+        new = torch.tensor(self.encode(new_state), device=self.device, dtype=self.dtype, requires_grad=True)
+        old = torch.tensor(self.encode(old_state), device=self.device, dtype=self.dtype, requires_grad=True)
+        params = list(self.model.parameters())
 
-        a.fit(x, y)
+        self.optimizer.zero_grad()
+        self.model.zero_grad()
 
-        pass
+        v_new_state = self.model(new)
+        v_old_state = self.model(old)
+
+        (-v_new_state).backward()  ## why negative??? figure out later
+
+        if len(self.eligibilitys) is 0:
+            for i, p in enumerate(params):
+                if not p.requires_grad:
+                    continue
+                self.eligibilitys.append(torch.zeros_like(p.grad, requires_grad=False))
+
+        delta = r + self._gamma * v_new_state.data - v_old_state.data
+        self.optimizer.zero_grad()
+        for i, p in enumerate(self.model.parameters()):
+            if not p.requires_grad:
+                continue
+            self.eligibilitys[i][:] = (self._gamma * self._trace_decay * self.eligibilitys[i]) + (self._gamma * p.grad)
+            p.grad[:] = delta.squeeze() * self.eligibilitys[i]
+
+        self.optimizer.step()
+        return delta
 
     def new_episode(self):
+        self.eligibilitys.clear()
         pass
 
     @staticmethod
@@ -119,8 +142,7 @@ def do_reinforcement_learning(actor, critic, init_state, n_episodes):
             action = actor.get_action(old_state)
             current_episode.append((old_state, action))
 
-            new_state = old_state.do_action(action)
-            r = new_state.reward()
+            (new_state, r) = old_state.do_action(action)
 
             td_error = critic.calculate_td_error(r, new_state, old_state)
 
@@ -157,14 +179,13 @@ def draw_state(state):
             colors.append('red')
         else:
             colors.append('black')
-    my_pos = nx.spring_layout(G, seed=5, iterations=50)
+    my_pos = nx.spring_layout(G, seed=4, iterations=50)
 
     nx.draw(G, pos=my_pos, node_color=colors)
     plt.show()
 
 
 def main():
-
     n_episodes = 1000
     gamma = 0.9  # discount rate γ
     learning_rate_a = 0.8  # α
@@ -174,18 +195,32 @@ def main():
     epsilon_decay = 0.9
 
     actor = Actor(learning_rate_a, trace_decay, gamma, epsilon, epsilon_decay)
-    critic = Critic(gamma, learning_rate_c, trace_decay)
-    #critic = NCritic(gamma, learning_rate_c, trace_decay)
+    #critic = Critic(gamma, learning_rate_c, trace_decay)
+
+    layers = (15, 20, 1)
+    critic = NCritic(gamma, learning_rate_c, trace_decay, layers)
 
     free_cells = list()
     free_cells.append((2, 1))
 
-    init_state = DiamondBoard(5, free_cells)
-    init_state = SortOfDiamondBoard()
+    init_state = TriangleBoard(5, free_cells)
+    # init_state = SortOfDiamondBoard()
 
     # init_state = DummyBoard()
 
     do_reinforcement_learning(actor, critic, init_state, n_episodes)
+
+
+def playWithtorch():
+    a = list()
+    a.append(1)
+    a.append(2)
+    a.append(3)
+    a.append(4)
+    a.append(5)
+
+    print(a[:])
+
 
 if __name__ == "__main__":
     main()
