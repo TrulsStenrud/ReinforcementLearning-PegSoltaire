@@ -3,6 +3,7 @@ from Boards.Triangle import TriangleBoard
 from Critic import Critic
 import matplotlib.pyplot as plt
 
+
 class Engine:
 
     @staticmethod
@@ -67,7 +68,6 @@ class Engine:
 
         Engine.plot(remaining_pegs)
         return winning_game
-
 
     @staticmethod
     def plot(remaining_pegs):

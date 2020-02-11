@@ -3,7 +3,8 @@ from random import random
 
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QGridLayout
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QGridLayout, \
+    QLineEdit, QComboBox
 from torch import nn
 from torch import optim
 
@@ -38,7 +39,7 @@ def draw_state(state):
             colors.append('red')
         else:
             colors.append('black')
-    my_pos = nx.spring_layout(G, seed=4, iterations=50)
+    my_pos = nx.spring_layout(G, iterations=50)
 
     nx.draw(G, pos=my_pos, node_color=colors)
     plt.show()
@@ -49,34 +50,112 @@ def main():
     draw_state(states[0][0])
 
 
-def test(canvas):
-    canvas.update()
+class GraphicalUserInterface:
+    def __init__(self):
+        app = QApplication([])
+        self.window = QWidget()
+        layout = QGridLayout(self.window)
 
+        self.network_canvas = Canvas()
+        self.network_canvas.setMinimumSize(400, 400)
 
-def playWithtorch():
-    app = QApplication([])
-    window = QWidget()
-    layout = QGridLayout()
+        layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
-    runButton = QPushButton("Run")
+        # layout.addWidget(run_btn, 0, 0)
 
-    canvas = Canvas()
-    runButton.clicked.connect(lambda: test(canvas))
-    runButton.setMaximumWidth(100)
-    layout.setAlignment(QtCore.Qt.AlignLeft)
+        layout.addWidget(self.network_canvas, 0, 2, 20, 1)
 
-    layout.addWidget(runButton, 0, 0)
-    layout.addWidget(QPushButton("Woho"), 1, 0)
+        line = 0
 
-    layout.addWidget(canvas, 1, 1)
+        l = QLabel("Critic")
+        self.critic = QComboBox()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.critic, line, 1)
+        line += 1
+        self.critic.addItem("Table based")
+        self.critic.addItem("Neural network")
 
-    window.setLayout(layout)
+        l = QLabel("Shape")
+        self.shape = QComboBox()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.shape, line, 1)
+        line += 1
+        self.shape.addItem("Diamond")
+        self.shape.addItem("Triangle")
 
-    window.setGeometry(400, 400, 500, 200)
-    window.show()
+        l = QLabel("Size:")
+        self.size = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.size, line, 1)
+        line += 1
 
-    app.exec()
+        l = QLabel("Episodes:")
+        self.episodes = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.episodes, line, 1)
+        line += 1
+
+        l = QLabel("Gamma:")
+        self.gamma = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.gamma, line, 1)
+        line += 1
+
+        l = QLabel("Alpha:")
+        self.alpha = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.alpha, line, 1)
+        line += 1
+
+        l = QLabel("Learning rate actor:")
+        self.l_actor = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.l_actor, line, 1)
+        line += 1
+
+        l = QLabel("Learning rate critic:")
+        self.l_critic = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.l_critic, line, 1)
+        line += 1
+
+        l = QLabel("Trace decay:")
+        self.trace_decay = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.trace_decay, line, 1)
+        line += 1
+
+        l = QLabel("Epsilon:")
+        self.epsilon = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.epsilon, line, 1)
+        line += 1
+
+        l = QLabel("Epsilon decay:")
+        self.epsilon_decay = QLineEdit()
+        layout.addWidget(l, line, 0)
+        layout.addWidget(self.epsilon_decay, line, 1)
+        line += 1
+
+        self.run_btn = QPushButton("Run")
+        self.run_btn.clicked.connect(self.run)
+        self.run_btn.setMaximumWidth(100)
+        layout.addWidget(self.run_btn, line, 0)
+
+        # window.setGeometry(400, 400, 500, 200)
+        self.window.show()
+
+        app.exec()
+
+    def run(self):
+        cells = list()
+        cells.append((1, 2))
+        self.network_canvas.setState(DiamondBoard(5, cells))
+        self.window.repaint()
+
+def testing():
+    a = GraphicalUserInterface()
 
 
 if __name__ == "__main__":
-    main()
+    testing()
