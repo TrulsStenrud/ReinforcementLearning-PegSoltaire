@@ -51,7 +51,7 @@ class Engine:
 
                 td_error = critic.calculate_td_error(r, new_state, old_state)
 
-                critic.update_stuff(current_episode, td_error)
+                critic.update_from_td_error(current_episode, td_error)
                 actor.update_td_error(current_episode, td_error)
 
                 old_state = new_state

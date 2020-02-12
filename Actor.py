@@ -7,7 +7,7 @@ class Actor:
         self.gamma = gamma
         self.learning_rate = learning_rate
         self.trace_decay = trace_decay
-        self.policy = defaultdict(lambda: random())
+        self.policy = defaultdict(lambda: 0)
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
 

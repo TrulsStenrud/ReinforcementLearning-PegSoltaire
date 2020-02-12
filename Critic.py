@@ -21,7 +21,7 @@ class Critic:
     def new_episode(self):
         pass
 
-    def update_stuff(self, current_episode, td_error):
+    def update_from_td_error(self, current_episode, td_error):
         eligibility = 1
         eligibility *= self._gamma * self._trace_decay
         for sa in reversed(current_episode):

@@ -22,7 +22,7 @@ from Boards.Triangle import TriangleBoard
 from Canvas import Canvas
 from Critic import Critic
 from Engine import Engine
-from NCrotic import NCritic
+from NCritic import NCritic
 from Network import Network
 from torchviz import make_dot
 
