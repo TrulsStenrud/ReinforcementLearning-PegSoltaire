@@ -75,8 +75,7 @@ class HexBoard:
         if count == 1:
             return reward
 
-        return -reward*count
-
+        return -reward * count
 
     def peg_count(self):
         count = 0
@@ -114,6 +113,21 @@ class HexBoard:
     def get_actions(self):
         return self.__actions__
 
+    def toggle(self, pos):
+        x = pos[0]
+        y = pos[1]
+        if not self.__isAPosition__(pos):
+            return self
+
+        new_board = list(map(lambda x: list(x), self.__board__))
+        value = new_board[x][y]
+        if value == 1:
+            new_board[x][y] = 0
+        else:
+            new_board[x][y] = 1
+
+        return HexBoard(tuple(map(lambda x: tuple(x), new_board)))
+
     def get_edges(self):
         edges = list()
         for x in range(0, len(self.__board__)):
@@ -131,4 +145,3 @@ class HexBoard:
                 if self.__isAPosition__(south_west):
                     edges.append(((x, y), south_west))
         return edges
-

@@ -63,6 +63,7 @@ class Engine:
             remaining_pegs.append(peg_count)
 
             if peg_count == 1:
+                current_episode.append((new_state, None))
                 winning_game = tuple(current_episode)
         #  for state in current_episode:
 
