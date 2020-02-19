@@ -4,36 +4,10 @@ from Critic import Critic
 import matplotlib.pyplot as plt
 
 
-class Engine:
+class RL:
 
     @staticmethod
-    def reinforcement_learning():
-        n_episodes = 500
-        gamma = 0.9  # discount rate γ
-        learning_rate_a = 0.8  # α
-        learning_rate_c = 0.8  # α
-        trace_decay = 0.8
-        epsilon = 0.5
-        epsilon_decay = 0.95
-
-        actor = Actor(learning_rate_a, trace_decay, gamma, epsilon, epsilon_decay)
-
-        layers = (15, 20, 1)
-        critic = Critic(gamma, learning_rate_c, trace_decay)
-        # critic = NCritic(gamma, learning_rate_c, trace_decay, layers)
-
-        free_cells = list()
-        free_cells.append((2, 1))
-
-        init_state = TriangleBoard(5, free_cells)
-        # init_state = SortOfDiamondBoard()
-
-        # init_state = DummyBoard()
-
-        return Engine.do_reinforcement_learning(actor, critic, init_state, n_episodes)
-
-    @staticmethod
-    def do_reinforcement_learning(actor, critic, init_state, n_episodes):
+    def do_actor_critic(actor, critic, init_state, n_episodes):
         remaining_pegs = list()
 
         winning_game = ()
@@ -65,9 +39,12 @@ class Engine:
             if peg_count == 1:
                 current_episode.append((new_state, None))
                 winning_game = tuple(current_episode)
+
+            if ep % 10 == 0:
+                print(ep)
         #  for state in current_episode:
 
-        Engine.plot(remaining_pegs)
+        RL.plot(remaining_pegs)
         return winning_game
 
     @staticmethod

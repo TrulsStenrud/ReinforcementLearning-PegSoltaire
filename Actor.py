@@ -18,23 +18,12 @@ class Actor:
             n = int(random() * len(actions))
             return actions[n]
         else:
-            return max(actions, key=lambda x: self.policy[(state, x)])
+            #return max(actions, key=lambda x: self.policy[(state, x)])
 
-            ## trying to pick values based on probability, but im not using it
-            ## now
-            m = min(map(lambda x: self.policy[(state, x)], actions))
-            tot = sum(map(lambda x: self.policy[(state, x)] - m, actions))
-
-            if tot == 0:
-                n = int(random() * len(actions))
-                return actions[n]
-
-            r = random()
-            counter = 0
-            for action in actions:
-                counter += (self.policy[(state, action)] - m) / tot
-                if counter > r:
-                    return action
+            max_value = max(map(lambda x: self.policy[(state, x)], actions))
+            best_actions = list(filter(lambda x: self.policy[(state, x)] == max_value, actions))
+            n = int(random() * len(best_actions))
+            return best_actions[n]
 
     def update_td_error(self, current_episode, td_error):
         eligibility = 1

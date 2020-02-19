@@ -64,8 +64,7 @@ class HexBoard:
 
         return 0 <= x < len(self.__board__) and 0 <= y < len(self.__board__[x])
 
-    # TODO this is only temporary, for a size 5 diamond game
-    def reward(self):
+    def __reward__(self):
         if not self.is_terminate_state():
             return 0
 
@@ -75,15 +74,10 @@ class HexBoard:
         if count == 1:
             return reward
 
-        return -reward * count
+        return -reward  # * count
 
     def peg_count(self):
-        count = 0
-        for row in self.__board__:
-            for peg in row:
-                if peg == 1:
-                    count += 1
-        return count
+        return sum(map(lambda x: sum(x), self.__board__))
 
     def is_terminate_state(self):
         return len(self.__actions__) == 0
@@ -94,18 +88,17 @@ class HexBoard:
 
         new_board = list(map(lambda x: list(x), self.__board__))
 
-        pos = action[0]
-        target = action[1]
-        dest = action[2]
+        pos_x, pos_y = action[0]
+        target_x, target_y = action[1]
+        dest_x, dest_y = action[2]
 
-        new_board[pos[0]][pos[1]] = 0
-        new_board[target[0]][target[1]] = 0
-        new_board[dest[0]][dest[1]] = 1
+        new_board[pos_x][pos_y] = 0
+        new_board[target_x][target_y] = 0
+        new_board[dest_x][dest_y] = 1
 
         new_state = HexBoard(tuple(map(lambda x: tuple(x), new_board)))
-        r = new_state.reward()
 
-        return new_state, r
+        return new_state, new_state.__reward__()
 
     def get_board(self):
         return self.__board__

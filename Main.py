@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 from random import random
 
 from PyQt5 import QtCore
@@ -6,6 +7,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QGridLayout, \
     QLineEdit, QComboBox, QSlider
+from pyasn1.compat.dateandtime import strptime
 from torch import nn
 from torch import optim
 
@@ -21,10 +23,11 @@ from Boards.DummyBoard import DummyBoard
 from Boards.Triangle import TriangleBoard
 from Canvas import Canvas
 from Critic import Critic
-from Engine import Engine
+from RL import RL
 from NCritic import NCritic
 from Network import Network
 from torchviz import make_dot
+import math
 
 triangle = "Triangle"
 diamond = "Diamond"
@@ -52,7 +55,7 @@ def draw_state(state):
 
 
 def main():
-    states = Engine.reinforcement_learning()
+    states = RL.reinforcement_learning()
     draw_state(states[0][0])
 
 
@@ -198,7 +201,7 @@ class GraphicalUserInterface:
         l = l.split(",")
         l = list(map(lambda x: int(x), l))
 
-        if l[0] == input_size and l[len(l)-1] == 1:
+        if l[0] == input_size and l[len(l) - 1] == 1:
             return l
 
         l[0] = input_size
@@ -228,7 +231,7 @@ class GraphicalUserInterface:
             layers = self.validate_layers(sum(map(lambda x: len(x), init_state.get_board())))
             critic = NCritic(gamma, l_rate_c, trace_decay, layers)
 
-        self.winning_run = Engine.do_reinforcement_learning(actor, critic, init_state, n_episodes)
+        self.winning_run = RL.do_actor_critic(actor, critic, init_state, n_episodes)
         if len(self.winning_run) > 0:
             self.slider.setMinimum(0)
             self.slider.setSingleStep(1)
@@ -247,7 +250,6 @@ class GraphicalUserInterface:
 
 def testing():
     a = GraphicalUserInterface()
-
 
 if __name__ == "__main__":
     testing()

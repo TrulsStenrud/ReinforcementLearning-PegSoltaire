@@ -14,7 +14,6 @@ class Canvas(QWidget):
         self.state = None
         self.action = None
         self.spacing = 0
-        self.offset = 50
 
     def setState(self, state):
         self.state = state
@@ -24,16 +23,17 @@ class Canvas(QWidget):
 
         max_x = len(board) - 1
 
+        # TODO find better way to calculate ofset and spacing/scaling
         self.spacing = 1
-        maxx, maxy, minx, miny = self.get_stuff(board, max_x)
+        maxx, maxy, minx, miny = self.calculate_bounds(board, max_x)
 
         self.spacing = 800.0 / max(maxx - minx, maxy - miny)
 
-        maxx, maxy, minx, miny = self.get_stuff(board, max_x)
+        maxx, maxy, minx, miny = self.calculate_bounds(board, max_x)
         self.offsetx = -minx + 50
         self.offsety = -miny + 50
 
-    def get_stuff(self, board, max_x):
+    def calculate_bounds(self, board, max_x):
         pos = list()
         x, y = self.to_coordinates(0, 0)
         pos.append(self.rotate(x, y, 45))
